@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "agent-sentinel"
 version = "0.1.0a0"
-description = "A conservative watchdog for autonomous AI coding agents"
+description = "Prevent AI coding agents from silently freezing during long-running tasks. AI Agent Watchdog monitors progress, detects stalls, and safely restores agent execution."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"

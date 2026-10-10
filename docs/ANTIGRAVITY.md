@@ -1,6 +1,6 @@
-# Google Antigravity 2.x
+# AI Agent Watchdog: Google Antigravity 2.x
 
-Sentinel uses the documented [lifecycle hooks](https://antigravity.google/docs/hooks)
+AI Agent Watchdog uses the documented [lifecycle hooks](https://antigravity.google/docs/hooks)
 and [sidecar agentapi CLI](https://antigravity.google/docs/sidecars). This release targets
 Antigravity 2.x but does not claim a live-tested compatibility matrix. No stable public
 snapshot listing API is assumed. Internal SQLite/protobuf stores are not read.
@@ -63,11 +63,11 @@ Create `~/.gemini/config/sidecars/agent-sentinel/` and copy the generated
 ```
 
 Reload Antigravity if needed. Sidecars receive `agentapi` in PATH. No `projectId` is
-needed because Sentinel sends to existing conversations and never creates new ones.
+needed because AI Agent Watchdog sends to existing conversations and never creates new ones.
 Do not also start the standalone watchdog. The single-instance lock prevents duplicates,
 but a second sidecar instance can still create noisy restart errors.
 
-Run a disposable conversation with a harmless tool and inspect Sentinel status/logs.
+Run a disposable conversation with a harmless tool and inspect AI Agent Watchdog status/logs.
 `checked` should become nonzero. Dry-run must remain on until your observations are
 reliable. To enable messages, set `dry_run: false` and restart the sidecar. An external
 `status` process may show `agentapi_available: false` when only the sidecar has the
@@ -103,4 +103,4 @@ unavoidable; no process termination is attempted.
 
 Files over 64 KiB and symlinks are rejected. Protect the runtime directory with your
 OS account permissions: snapshots are trusted local input and routing IDs remain on
-disk there. Sentinel is not a boundary against another process running as your user.
+disk there. AI Agent Watchdog is not a boundary against another process running as your user.

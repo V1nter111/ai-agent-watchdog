@@ -1,4 +1,6 @@
-# Contributing
+# Contributing to AI Agent Watchdog
+
+AI Agent Watchdog is powered by the Agent Sentinel monitoring engine.
 
 Open an issue for a bug or provider proposal. Include reproducible, sanitized steps;
 never publish real conversation snapshots, transcripts, tokens or local user paths.

@@ -18,7 +18,7 @@ from .watchdog import Watchdog
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description="Agent Sentinel watchdog")
+    parser = argparse.ArgumentParser(description="AI Agent Watchdog powered by Agent Sentinel")
     parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument("--config", default="config/sentinel.json")
     parser.add_argument("command", choices=["run", "check", "status", "validate", "stop", "hook", "integration"])
@@ -48,7 +48,7 @@ def main(argv=None) -> int:
             atomic_json(runtime / "sidecar.json", {
                 "command": sys.executable,
                 "args": ["-m", "agent_sentinel", "--config", config_path, "run"],
-                "restart_policy": "on-failure", "display_name": "Agent Sentinel",
+                "restart_policy": "on-failure", "display_name": "AI Agent Watchdog",
                 "description": "Watch for lack of agent progress"})
             print(json.dumps({"generated": ["hooks.json", "sidecar.json"],
                               "hint": "See docs/ANTIGRAVITY.md to enable the integration"}))

@@ -1,4 +1,10 @@
-# Changelog
+# AI Agent Watchdog changelog
+
+## Unreleased
+
+- Rebrand the public project as AI Agent Watchdog, powered by the Agent Sentinel
+  monitoring engine. Update documentation, CLI help and sidecar display name.
+- Preserve package names, CLI commands, integration identifiers and watchdog behavior.
 
 ## 0.1.0-alpha — 2026-10-10
 

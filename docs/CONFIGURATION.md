@@ -1,4 +1,4 @@
-# Configuration
+# AI Agent Watchdog configuration
 
 Copy `config/sentinel.example.json` to the gitignored `config/sentinel.json`. JSON with
 an optional UTF-8 BOM is accepted. Unknown fields, wrong types, nonfinite numbers and

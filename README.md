@@ -1,16 +1,20 @@
-# Agent Sentinel v0.1.0-alpha
+# AI Agent Watchdog
 
-> Leave your AI coding agent running overnight without worrying about silent freezes.
+> Prevent AI coding agents from silently freezing during long-running tasks.
 
-Agent Sentinel is an open-source watchdog for autonomous AI coding agents. Terminal
+AI Agent Watchdog is an open-source watchdog for autonomous AI coding agents. Terminal
 commands, builds, tests, Docker tasks, migrations and background jobs can stop making
-progress while an agent continues to wait. Sentinel periodically checks conversation
+progress while an agent continues to wait. AI Agent Watchdog periodically checks conversation
 progress and sends a bounded, conservative recovery reminder when a stall is suspected.
 
 The first provider targets **Google Antigravity 2.x**, using its documented hooks and
 `agentapi send-message` command. Provider interfaces allow future Codex, Claude Code
 and Gemini CLI integrations. This alpha is a heuristic watchdog, not a guarantee that
 every freeze is detected or every long job is distinguished from a freeze.
+
+AI Agent Watchdog is powered by the Agent Sentinel monitoring engine.
+Current release: **v0.1.0-alpha**. The Python package (`agent_sentinel`), CLI command
+(`agent-sentinel`) and integration identifiers retain their existing names.
 
 ## Features
 
@@ -91,7 +95,7 @@ invocations of `check` do not send recovery messages.
 Keep `dry_run: true` while validating your hook setup. When `checked` is nonzero and
 `would_recover` events match real stalls, set `dry_run: false` and restart the watchdog.
 Before enabling live messages, use a disposable conversation to test your `agentapi`
-installation. Sentinel does not kill processes or restart commands.
+installation. AI Agent Watchdog does not kill processes or restart commands.
 
 ## Change the interval
 
@@ -158,3 +162,12 @@ CI runs tests, lint and package builds on Windows/Linux with Python 3.10, 3.12 a
 See [CONTRIBUTING.md](CONTRIBUTING.md). Planned: live Antigravity compatibility fixtures,
 process/heartbeat adapters, per-tool grace, notifications, and Codex/Claude Code/Gemini
 CLI providers. See [CHANGELOG.md](CHANGELOG.md) for this release.
+
+## Keywords
+
+- AI agent watchdog
+- coding agent reliability
+- autonomous AI agents
+- LLM agents
+- agent recovery
+- agent monitoring
