@@ -22,7 +22,10 @@ def test_hook_command_executes_with_spaces_and_shell_characters(tmp_path, event)
     config = directory / "config.json"
     config.write_text(json.dumps({"provider": {"state_directory": "states"}}))
     command = integration.hook_command(sys.executable, str(config), event)
-    argv = ["cmd.exe", "/d", "/c", command] if os.name == "nt" else ["sh", "-c", command]
+    # Code page 65001 makes .NET Framework's default native stdin writer emit a
+    # UTF-8 BOM unless the launcher explicitly selects an encoding without it.
+    argv = (["cmd.exe", "/d", "/c", "chcp 65001 >nul & " + command]
+            if os.name == "nt" else ["sh", "-c", command])
     env = {**os.environ, "PYTHONPATH": os.path.abspath("src")}
     payload = json.dumps({"conversationId": "synthetic-hook-test", "fullyIdle": True,
                           "ignored": "Unicode: \u043f\u0440\u0438\u0432\u0435\u0442"}, ensure_ascii=False)

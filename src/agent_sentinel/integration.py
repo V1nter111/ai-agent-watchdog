@@ -25,6 +25,7 @@ def hook_command(executable: str, config_path: str, event: str) -> str:
     # Copy the original stdin bytes: PowerShell's text pipeline and Console.In
     # decoding vary with the host console's encoding (including on CI runners).
     script = ("$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue'; "
+              "[Console]::InputEncoding = [Text.UTF8Encoding]::new($false); "
               "$start = [Diagnostics.ProcessStartInfo]::new(); "
               "$start.FileName = " + executable_literal + "; "
               "$start.Arguments = " + arguments_literal + "; "
