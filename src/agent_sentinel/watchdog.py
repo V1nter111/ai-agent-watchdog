@@ -56,6 +56,8 @@ class Watchdog:
                 continue
             result["suspicious"] += 1
             data = {"conversation_hash": identity(state)[:16]}
+            self.logger.info("stall_detected", extra={"data": {
+                **data, "check_time": now, "stale_for_seconds": now - state.last_progress_at}})
             if self.config.dry_run:
                 self.logger.info("would_recover", extra={"data": data})
                 continue

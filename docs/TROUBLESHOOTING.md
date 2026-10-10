@@ -15,6 +15,8 @@
 | Invalid recovery ledger | Stop AI Agent Watchdog, privately inspect or back up recovery.json and correct it. Do not silently reset limits. |
 | Stop takes time | An in-flight send can run up to command_timeout_seconds; several conversations can extend a check. No agent process is killed. |
 | Hook command fails after moving repo | Reinstall package and regenerate integration files; update the Antigravity entries. |
+| Windows hook says a quoted Python path is not recognized | Upgrade to 0.2.0-alpha, regenerate integration and merge the corrected hook entry. Do not disable Shell Integration. |
+| Custom Windows agentapi batch wrapper rejected | Use Antigravity's bundled wrapper or configure the native language_server.exe with the fixed agentapi argument. Arbitrary batch wrappers are not executed. |
 | Permission prompt from optional PreToolUse | Its ask decision preserves grants; remove this optional event to use only passive hooks. |
 | Uninstalled sidecar keeps restarting | Disable/remove the AI Agent Watchdog sidecar and hook entries in Antigravity. |
 
@@ -29,6 +31,11 @@ Get-Content .sentinel\sentinel.log -Tail 20
 `check` performs a single inspection and exits successfully if the engine ran, even
 when provider status is unavailable. Use logs/status to assess integration health.
 CLI errors deliberately omit exception details, command output and local paths.
+
+`stall_detected` records the detection timestamp, polling `check_time`, elapsed
+`stale_for_seconds` and a hashed conversation reference. `recovery_sent` records successful
+CLI completion; confirm delivery and continuation in your disposable conversation too.
+Repeated detection may be followed by `recovery_suppressed` because cooldown still applies.
 
 When reporting issues, include OS, Python/AI Agent Watchdog/Antigravity versions, sanitized
 timing configuration and event counts. Do not attach snapshots, generated integration

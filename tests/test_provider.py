@@ -6,6 +6,7 @@ import pytest
 
 from agent_sentinel.config import ProviderConfig
 from agent_sentinel.hooks import record_hook
+from agent_sentinel.providers import antigravity
 from agent_sentinel.providers.antigravity import AntigravityProvider, parse_state
 from agent_sentinel.providers.base import ProviderError
 
@@ -91,3 +92,37 @@ def test_waiting_tool(tmp_path):
     record_hook("PreToolUse", {"conversationId": "test-session",
                               "toolCall": {"name": "ask_question"}}, tmp_path, 0)
     assert AntigravityProvider(ProviderConfig(), tmp_path).states(0)[0].status == "waiting_for_user"
+
+
+def test_windows_bundled_agentapi_wrapper_uses_native_argv(tmp_path, monkeypatch):
+    native = tmp_path / "install with spaces" / "language_server.exe"
+    native.parent.mkdir()
+    native.touch()
+    native.chmod(0o700)
+    wrapper = tmp_path / "agentapi.bat"
+    wrapper.write_text(f'@echo off\n"{native}" agentapi %*\n')
+    wrapper.chmod(0o700)
+    monkeypatch.setattr(antigravity, "_WINDOWS", True)
+    provider = AntigravityProvider(ProviderConfig(agentapi_command=[str(wrapper)]), tmp_path)
+    captured = []
+    monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: captured.append((args, kwargs)))
+    prompt = 'line one\nquotes " & %PATH% $(command)'
+    provider.send_recovery(parse_state(snapshot(), 100, 1000), prompt)
+    args, kwargs = captured[0]
+    assert args[0] == [str(native), "agentapi", "send-message", "test-session", prompt]
+    assert kwargs["shell"] is False
+    assert provider.health()["agentapi_available"]
+
+
+def test_unknown_windows_batch_wrapper_is_not_executed(tmp_path, monkeypatch):
+    wrapper = tmp_path / "agentapi.bat"
+    wrapper.write_text('@echo off\necho unsafe %*\n')
+    wrapper.chmod(0o700)
+    monkeypatch.setattr(antigravity, "_WINDOWS", True)
+    provider = AntigravityProvider(ProviderConfig(agentapi_command=[str(wrapper)]), tmp_path)
+    def forbidden(*args, **kwargs):
+        pytest.fail("Unrecognized batch wrappers must not execute")
+    monkeypatch.setattr(subprocess, "run", forbidden)
+    with pytest.raises(ProviderError, match="agentapi_wrapper_unsupported"):
+        provider.send_recovery(parse_state(snapshot(), 100, 1000), "message")
+    assert not provider.health()["ready"]

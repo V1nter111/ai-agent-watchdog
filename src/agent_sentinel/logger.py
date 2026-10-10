@@ -8,6 +8,8 @@ import time
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
+_WINDOWS = os.name == "nt"
+
 
 def atomic_json(path: Path, data: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -15,7 +17,14 @@ def atomic_json(path: Path, data: dict) -> None:
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
             json.dump(data, stream, allow_nan=False)
-        os.replace(name, path)
+        for attempt in range(6):
+            try:
+                os.replace(name, path)
+                break
+            except PermissionError as exc:
+                if not _WINDOWS or getattr(exc, "winerror", None) not in {5, 32, 33} or attempt == 5:
+                    raise
+                time.sleep(0.05)
     finally:
         if os.path.exists(name):
             os.unlink(name)

@@ -2,6 +2,7 @@
 
 import json
 import math
+import os
 import re
 import shutil
 import subprocess
@@ -9,6 +10,8 @@ from pathlib import Path
 
 from ..config import ProviderConfig
 from .base import ConversationState, ProviderError
+
+_WINDOWS = os.name == "nt"
 
 
 def parse_state(data: dict, now: float, max_age: float) -> ConversationState:
@@ -46,8 +49,32 @@ class AntigravityProvider:
         self.state_directory = state_directory
         self.invalid_states = 0
 
+    def _command(self) -> list[str]:
+        command = list(self.config.agentapi_command)
+        executable = shutil.which(command[0])
+        if not _WINDOWS or not executable or Path(executable).suffix.lower() not in {
+                ".bat", ".cmd"}:
+            return command
+        # The bundled Antigravity wrapper is exactly a native executable plus the
+        # agentapi subcommand. Unwrap it instead of letting Windows invoke a shell
+        # with recovery text. Reject other batch files; a native argv is supported.
+        path = Path(executable)
+        if path.stat().st_size > 4096:
+            raise ProviderError("agentapi_wrapper_unsupported")
+        wrapper = path.read_text(encoding="utf-8-sig").strip()
+        match = re.fullmatch(r'@echo off\s+"([^"\r\n]+)"\s+agentapi\s+%\*', wrapper,
+                             flags=re.IGNORECASE)
+        if not match or Path(match[1]).name.lower() != "language_server.exe":
+            raise ProviderError("agentapi_wrapper_unsupported")
+        if not Path(match[1]).is_file():
+            raise ProviderError("agentapi_executable_unavailable")
+        return [match[1], "agentapi", *command[1:]]
+
     def health(self) -> dict:
-        executable = shutil.which(self.config.agentapi_command[0])
+        try:
+            executable = shutil.which(self._command()[0])
+        except (OSError, ValueError, ProviderError):
+            executable = None
         directory = self.state_directory.is_dir()
         return {"name": "antigravity", "agentapi_available": executable is not None,
                 "state_source_available": directory,
@@ -81,10 +108,10 @@ class AntigravityProvider:
 
     def send_recovery(self, state: ConversationState, message: str) -> None:
         try:
-            subprocess.run([*self.config.agentapi_command, "send-message",
+            subprocess.run([*self._command(), "send-message",
                             state.conversation_id, message], check=True,
                            timeout=self.config.command_timeout_seconds,
                            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                            stderr=subprocess.DEVNULL, shell=False)
-        except (OSError, subprocess.SubprocessError) as exc:
+        except (OSError, ValueError, subprocess.SubprocessError) as exc:
             raise ProviderError("agentapi_send_failed") from exc

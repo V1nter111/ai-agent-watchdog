@@ -1,3 +1,4 @@
+import json
 from dataclasses import replace
 
 from agent_sentinel.config import Config
@@ -99,3 +100,18 @@ def test_logs_do_not_contain_raw_identity(tmp_path):
     watchdog.check(0)
     watchdog.check(120)
     assert "test-session" not in (tmp_path / "sentinel.log").read_text()
+
+
+def test_detection_precedes_automatic_recovery_with_sanitized_evidence(tmp_path):
+    provider = FakeProvider()
+    watchdog = Watchdog(Config(dry_run=False, confirmation_checks=2), provider, tmp_path)
+    assert watchdog.check(0)["suspicious"] == 0
+    assert watchdog.check(120)["recoveries"] == 0
+    assert watchdog.check(240)["recoveries"] == 1
+    events = [json.loads(line) for line in (tmp_path / "sentinel.log").read_text().splitlines()]
+    detected = next(i for i, event in enumerate(events) if event["event"] == "stall_detected")
+    sent = next(i for i, event in enumerate(events) if event["event"] == "recovery_sent")
+    assert detected < sent
+    assert events[detected]["check_time"] == 240
+    assert events[detected]["stale_for_seconds"] == 240
+    assert "test-session" not in json.dumps(events)

@@ -1,8 +1,9 @@
 # AI Agent Watchdog: Google Antigravity 2.x
 
 AI Agent Watchdog uses the documented [lifecycle hooks](https://antigravity.google/docs/hooks)
-and [sidecar agentapi CLI](https://antigravity.google/docs/sidecars). This release targets
-Antigravity 2.x but does not claim a live-tested compatibility matrix. No stable public
+and [sidecar agentapi CLI](https://antigravity.google/docs/sidecars). Antigravity 2.19.1
+on Windows passed a real automatic recovery test; see [validation](VALIDATION.md).
+Other versions require their own smoke test. No stable public
 snapshot listing API is assumed. Internal SQLite/protobuf stores are not read.
 
 ## Generate the integration
@@ -16,6 +17,11 @@ After installation, run from the repository:
 Files are generated inside the configured runtime directory, `.sentinel` by default.
 They contain local installation paths and must remain private. Regenerate them if you
 move the installation or change its virtual environment.
+
+Version 0.2.0 fixes Windows hook quote escaping: simple paths use forward slashes
+without unnecessary quotes; paths with spaces or shell characters use an encoded
+PowerShell command that preserves stdin JSON. POSIX commands use shell argument quoting.
+No changes to Shell Integration, MCP or Antigravity binaries are required.
 
 ## Enable hooks
 
@@ -73,6 +79,20 @@ reliable. To enable messages, set `dry_run: false` and restart the sidecar. An e
 `status` process may show `agentapi_available: false` when only the sidecar has the
 injected PATH; `watchdog_provider` preserves the daemon's last assessment, while
 `provider` shows the current shell's assessment and current snapshot counts.
+
+On Windows, the bundled `agentapi.bat` invokes `language_server.exe agentapi`.
+The provider recognizes that wrapper and invokes the same native executable directly
+with argument arrays, preserving multiline messages and avoiding batch shell expansion.
+Other batch wrappers are rejected. You can also set `provider.agentapi_command` to
+`["<Antigravity installation>/resources/bin/language_server.exe", "agentapi"]` using
+your actual local path. Keep that machine-specific configuration private. Ordinary
+shells still need the Antigravity API environment for actual delivery.
+
+Before an upgrade, back up Antigravity configuration, hooks, sidecars and private
+Sentinel configuration. Stop or disable only the Sentinel sidecar, run the installer,
+regenerate integration and merge its named entry while preserving other customizations.
+Keep the previous watchdog files until the new installation passes a disposable test.
+Re-enable the managed sidecar with `dry_run: true`; do not start a duplicate daemon.
 
 ## Snapshot contract
 

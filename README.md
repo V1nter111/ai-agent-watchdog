@@ -1,6 +1,8 @@
 # AI Agent Watchdog
 
-> Prevent AI coding agents from silently freezing during long-running tasks.
+Powered by Agent Sentinel engine.
+
+AI Agent Watchdog prevents AI coding agents from silently freezing during long-running tasks.
 
 AI Agent Watchdog is an open-source watchdog for autonomous AI coding agents. Terminal
 commands, builds, tests, Docker tasks, migrations and background jobs can stop making
@@ -12,9 +14,30 @@ The first provider targets **Google Antigravity 2.x**, using its documented hook
 and Gemini CLI integrations. This alpha is a heuristic watchdog, not a guarantee that
 every freeze is detected or every long job is distinguished from a freeze.
 
-AI Agent Watchdog is powered by the Agent Sentinel monitoring engine.
-Current release: **v0.1.0-alpha**. The Python package (`agent_sentinel`), CLI command
+Current release: **v0.2.0-alpha**. This is the next release of the existing Agent Sentinel
+project. The Python package (`agent_sentinel`), CLI command
 (`agent-sentinel`) and integration identifiers retain their existing names.
+
+The repository is now `V1nter111/ai-agent-watchdog`; the former `V1nter111/agent-sentinel`
+URL redirects to it. Existing commits, tags, releases and issues are retained. For an
+existing checkout, update its remote without moving your installation:
+
+```sh
+git remote set-url origin https://github.com/V1nter111/ai-agent-watchdog.git
+```
+
+## Validated Integrations
+
+| Integration | Platform | Validation |
+| --- | --- | --- |
+| Google Antigravity 2.19.1 | Windows, Python 3.12 | PASS: managed Sidecar, real agentapi communication, automatic stall detection and recovery delivery, agent continuation, original process completion without restart |
+
+The isolated live test on 2026-10-10 ran a real 100-second silent process. Sentinel
+automatically sent one recovery message; the agent continued working and the original
+process completed normally. The test used an interval of 5 seconds, a stale threshold
+of 20 seconds and tool grace of 30 seconds. Normal defaults and `dry_run: true` were
+restored afterward. This validates the delivery flow at those test thresholds, not
+every freeze or other Antigravity versions. See the [validation report](docs/VALIDATION.md).
 
 ## Features
 
@@ -30,8 +53,8 @@ Current release: **v0.1.0-alpha**. The Python package (`agent_sentinel`), CLI co
 ## Install on Windows
 
 ```powershell
-git clone https://github.com/V1nter111/agent-sentinel.git
-cd agent-sentinel
+git clone https://github.com/V1nter111/ai-agent-watchdog.git
+cd ai-agent-watchdog
 .\scripts\install.ps1
 ```
 
@@ -66,8 +89,9 @@ have the Antigravity `agentapi` executable available through PATH or
 
 State collection uses documented hook payloads, not an undocumented database decoder.
 The provider also accepts explicit normalized JSON snapshots from a trusted adapter.
-See [the state contract](docs/ANTIGRAVITY.md#snapshot-contract). Live Antigravity
-delivery must be verified in your environment; the automated suite uses a fake CLI.
+See [the state contract](docs/ANTIGRAVITY.md#snapshot-contract). Live delivery is validated
+on Antigravity 2.19.1 for Windows; repeat the isolated smoke test in your environment.
+Automated tests use synthetic identities and a fake CLI.
 
 ## Run and inspect
 

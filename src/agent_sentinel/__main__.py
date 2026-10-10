@@ -10,6 +10,7 @@ from pathlib import Path
 from . import __version__
 from .config import ConfigError, load_config, resolve_path
 from .hooks import EVENTS, record_hook
+from .integration import hook_command
 from .logger import atomic_json
 from .providers.antigravity import AntigravityProvider
 from .providers.base import ProviderError
@@ -18,7 +19,7 @@ from .watchdog import Watchdog
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description="AI Agent Watchdog powered by Agent Sentinel")
+    parser = argparse.ArgumentParser(description="AI Agent Watchdog powered by Agent Sentinel engine")
     parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument("--config", default="config/sentinel.json")
     parser.add_argument("command", choices=["run", "check", "status", "validate", "stop", "hook", "integration"])
@@ -33,15 +34,12 @@ def main(argv=None) -> int:
             print(json.dumps({"valid": True, "version": __version__}))
         elif args.command == "integration":
             config_path = str(Path(args.config).resolve())
-            # Quotes here are for Antigravity's documented shell-based hook runner.
-            if any(c in sys.executable + config_path for c in ('"', '$', '`', '\n', '\r')):
-                raise ValueError("Unsupported shell characters in installation path")
-            command = f'"{sys.executable}" -m agent_sentinel --config "{config_path}" hook --event '
             hooks = {}
             for event in EVENTS:
                 if event == "PreToolUse":
                     continue  # Passive defaults must not change tool permission decisions.
-                handler = {"type": "command", "command": command + event, "timeout": 10}
+                handler = {"type": "command", "command": hook_command(
+                    sys.executable, config_path, event), "timeout": 10}
                 hooks[event] = ([{"matcher": ".*", "hooks": [handler]}]
                                 if event == "PostToolUse" else [handler])
             atomic_json(runtime / "hooks.json", {"agent-sentinel": hooks})
