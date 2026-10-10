@@ -218,3 +218,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Agent Sentinel private configuration and runtime
+config/sentinel.json
+.sentinel/

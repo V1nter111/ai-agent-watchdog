@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "interval_seconds": 120,
+  "stale_seconds": 120,
+  "cooldown_seconds": 600,
+  "max_recovery_attempts": 2,
+  "confirmation_checks": 2,
+  "tool_grace_seconds": 3600,
+  "dry_run": true,
+  "runtime_directory": "../.sentinel",
+  "provider": {
+    "name": "antigravity",
+    "state_directory": "../.sentinel/conversations",
+    "agentapi_command": ["agentapi"],
+    "command_timeout_seconds": 30,
+    "max_state_age_seconds": 86400
+  }
+}
