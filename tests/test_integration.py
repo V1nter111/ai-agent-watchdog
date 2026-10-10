@@ -24,10 +24,20 @@ def test_hook_command_executes_with_spaces_and_shell_characters(tmp_path, event)
     command = integration.hook_command(sys.executable, str(config), event)
     argv = ["cmd.exe", "/d", "/c", command] if os.name == "nt" else ["sh", "-c", command]
     env = {**os.environ, "PYTHONPATH": os.path.abspath("src")}
-    result = subprocess.run(argv, check=False, input=json.dumps({"conversationId": "synthetic-hook-test",
-                            "fullyIdle": True, "ignored": "Unicode: \u043f\u0440\u0438\u0432\u0435\u0442"},
-                            ensure_ascii=False), text=True, encoding="utf-8", capture_output=True,
+    payload = json.dumps({"conversationId": "synthetic-hook-test", "fullyIdle": True,
+                          "ignored": "Unicode: \u043f\u0440\u0438\u0432\u0435\u0442"}, ensure_ascii=False)
+    result = subprocess.run(argv, check=False, input=payload, text=True, encoding="utf-8", capture_output=True,
                             env={**env, "PYTHONIOENCODING": "utf-8"}, timeout=15)
+    if result.returncode:
+        probe = tmp_path / "probe" / "agent_sentinel"
+        probe.mkdir(parents=True)
+        (probe / "__init__.py").touch()
+        (probe / "__main__.py").write_text(
+            "import json, sys\nprint(json.dumps({'stdin_hex': sys.stdin.buffer.read().hex()}))")
+        diagnostic = subprocess.run(argv, check=False, input=payload, text=True, encoding="utf-8",
+                                    capture_output=True, env={**env, "PYTHONPATH": str(probe.parent)},
+                                    timeout=15)
+        pytest.fail(result.stderr + "\nSynthetic stdin probe: " + diagnostic.stdout + diagnostic.stderr)
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout) == ({"decision": "stop"} if event == "Stop" else {})
     snapshot = json.loads(next((directory / "states").glob("*.json")).read_text())
