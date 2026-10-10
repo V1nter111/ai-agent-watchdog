@@ -19,4 +19,30 @@ jobs:
       - run: python -m ruff check .
       - run: python -m pytest
       - run: python -m build
+      - name: Install wheel in a clean environment
+        shell: python {0}
+        run: |
+          import os
+          import pathlib
+          import subprocess
+          import tempfile
+          import venv
+
+          wheel, = pathlib.Path('dist').glob('*.whl')
+          with tempfile.TemporaryDirectory(prefix='watchdog-wheel-') as directory:
+              environment = pathlib.Path(directory) / 'venv'
+              venv.EnvBuilder(with_pip=True).create(environment)
+              python = environment / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
+              def run(*arguments):
+                  subprocess.run([str(python), *arguments], cwd=directory, check=True)
+              run('-m', 'pip', 'install', '--no-deps', str(wheel.resolve()))
+              run('-m', 'pip', 'check')
+              run('-m', 'agent_sentinel', '--help')
+              run('-m', 'agent_sentinel', '--version')
+      - name: Check Windows installer and status scripts
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          .\scripts\install.ps1
+          .\scripts\status.ps1
       - run: python -m agent_sentinel --config config/sentinel.example.json validate

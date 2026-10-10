@@ -50,6 +50,23 @@ every freeze or other Antigravity versions. See the [validation report](docs/VAL
 - OS-managed single-instance lock; graceful shutdown; Windows lifecycle scripts.
 - Python 3.10+, no third-party runtime dependencies. MIT licensed.
 
+## Quick Start
+
+Install → Configure → Run watchdog → Check status.
+
+1. **Install:** use the Windows commands below. Python 3.10+ and Git must be on PATH.
+2. **Configure:** review `config/sentinel.json`, keep `dry_run: true`, then generate
+   and connect the [Antigravity hooks and Sidecar](docs/ANTIGRAVITY.md).
+3. **Run watchdog:** enable the managed Sidecar in Antigravity and reload the app.
+   For standalone operation instead, use `scripts/start.ps1` after configuring agentapi.
+4. **Check status:** run `scripts/status.ps1`, then use a disposable conversation
+   with a harmless tool to check that snapshots and the daemon's `checked` count advance.
+
+A fresh installation does not start the watchdog or connect Antigravity automatically.
+Before connection, `running: false`, `agentapi_available: false` and `ready: false`
+are expected. After connection, look for `running: true` and a ready
+`watchdog_provider`; see [status interpretation](docs/ANTIGRAVITY.md#check-the-connection).
+
 ## Install on Windows
 
 ```powershell
@@ -63,7 +80,7 @@ The installer checks Python, creates `.venv`, installs the package, creates the 
 Use `install.ps1 -Dev` for pytest, Ruff and build tooling. If PowerShell blocks scripts,
 review them and use a process-scoped execution policy appropriate for your environment.
 
-On Linux/macOS:
+On Linux/macOS, first clone the repository and change into `ai-agent-watchdog`, then:
 
 ```sh
 python3 -m venv .venv
@@ -71,6 +88,23 @@ python3 -m venv .venv
 cp config/sentinel.example.json config/sentinel.json
 .venv/bin/python -m agent_sentinel --config config/sentinel.json validate
 ```
+
+### Install a release package
+
+The [v0.2.0-alpha release](https://github.com/V1nter111/ai-agent-watchdog/releases/tag/v0.2.0-alpha)
+also provides a wheel, a source archive and `SHA256SUMS.txt`. In a virtual environment:
+
+```sh
+python -m pip install /path/to/agent_sentinel-0.2.0a0-py3-none-any.whl
+python -m agent_sentinel --help
+```
+
+The wheel installs the Python package and CLI, with no third-party runtime dependencies.
+It does not install the repository's PowerShell scripts or example configuration.
+For the guided setup, use a checkout or extract the source archive. For wheel-only
+setup, copy [sentinel.example.json](config/sentinel.example.json) to a private config
+file, review its paths, and pass `--config /path/to/sentinel.json` to CLI commands.
+Version `0.2.0a0` in Python package metadata corresponds to release `v0.2.0-alpha`.
 
 ## Connect Antigravity
 
@@ -137,6 +171,20 @@ Edit `config/sentinel.json`:
 These are fields to modify in the full config, not a replacement file. Restart after
 editing. `tool_grace_seconds` defaults to 3600 for potentially long tool work.
 [Configuration reference](docs/CONFIGURATION.md) explains thresholds and limitations.
+
+## Enable or disable recovery
+
+Edit the existing full `config/sentinel.json` and restart the watchdog after changes:
+
+- `dry_run: true`: monitor and log `would_recover` events without sending messages.
+- `dry_run: false`: allow automatic recovery messages after confirmation and cooldown.
+  Validate this first in a disposable Antigravity conversation.
+- `enabled: false`: disable watchdog checks and recovery. To stop the process too,
+  disable its managed Sidecar in Antigravity; for standalone operation use
+  `scripts/stop.ps1`. A managed Sidecar may restart a process stopped with the CLI.
+
+Back up your private configuration, hooks and Sidecars before integration changes.
+Preserve other Sidecars and leave Shell Integration enabled.
 
 ## Recovery reminder
 

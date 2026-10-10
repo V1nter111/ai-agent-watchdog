@@ -21,5 +21,5 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Configuration validation failed.' }
     & $SentinelPython -m agent_sentinel --config $SentinelConfig status
     if ($LASTEXITCODE -ne 0) { throw 'Startup self-check failed.' }
-    Write-Output 'Installed. Configure Antigravity using docs/ANTIGRAVITY.md. Dry-run is enabled.'
+    Write-Output 'Installed. Configure Antigravity using docs/ANTIGRAVITY.md. Review configuration.dry_run in the status above; existing settings are preserved.'
 } finally { Pop-Location }

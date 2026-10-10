@@ -6,6 +6,21 @@ on Windows passed a real automatic recovery test; see [validation](VALIDATION.md
 Other versions require their own smoke test. No stable public
 snapshot listing API is assumed. Internal SQLite/protobuf stores are not read.
 
+## Validated integration
+
+The isolated Windows live test confirmed:
+
+- Antigravity 2.19.1.
+- Managed Sidecar integration.
+- Real agentapi communication.
+- Automatic stall detection and recovery message delivery.
+- Agent continuation after recovery.
+- Completion of the original process without restarting it.
+
+The test used shorter timing thresholds than the defaults and a disposable project.
+See [VALIDATION.md](VALIDATION.md) for timestamps and limits of this evidence.
+Keep `dry_run: true` for normal setup until you validate your own environment.
+
 ## Generate the integration
 
 After installation, run from the repository:
@@ -93,6 +108,29 @@ Sentinel configuration. Stop or disable only the Sentinel sidecar, run the insta
 regenerate integration and merge its named entry while preserving other customizations.
 Keep the previous watchdog files until the new installation passes a disposable test.
 Re-enable the managed sidecar with `dry_run: true`; do not start a duplicate daemon.
+
+## Check the connection
+
+Run from the installation directory:
+
+```powershell
+.\scripts\status.ps1
+```
+
+Expect `running: true` after enabling the Sidecar. After a harmless tool completes
+in a disposable conversation, the daemon's last check should report a nonzero
+`checked` count and `watchdog_provider.ready: true`. Examine `.sentinel/sentinel.log`
+for checks and dry-run `would_recover` events when a stall is suspected.
+
+Before hook events arrive, `state_source_available: false` can be normal. An ordinary
+shell may lack the Sidecar's injected API environment; its `provider` assessment
+does not replace the running daemon's `watchdog_provider` assessment. Missing
+`watchdog_provider` means no daemon assessment has been saved yet. See
+[troubleshooting](TROUBLESHOOTING.md) if readiness remains false after a test event.
+
+To stop automatic messages, restore `dry_run: true` and restart the Sidecar. To stop
+the watchdog process, disable only the `agent-sentinel` Sidecar in Antigravity.
+Preserve other Sidecars, hooks, MCP and Shell Integration.
 
 ## Snapshot contract
 
