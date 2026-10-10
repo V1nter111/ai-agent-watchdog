@@ -25,7 +25,9 @@ def test_hook_command_executes_with_spaces_and_shell_characters(tmp_path, event)
     argv = ["cmd.exe", "/d", "/c", command] if os.name == "nt" else ["sh", "-c", command]
     env = {**os.environ, "PYTHONPATH": os.path.abspath("src")}
     result = subprocess.run(argv, check=False, input=json.dumps({"conversationId": "synthetic-hook-test",
-                            "fullyIdle": True}), text=True, capture_output=True, env=env, timeout=15)
+                            "fullyIdle": True, "ignored": "Unicode: \u043f\u0440\u0438\u0432\u0435\u0442"},
+                            ensure_ascii=False), text=True, encoding="utf-8", capture_output=True,
+                            env={**env, "PYTHONIOENCODING": "utf-8"}, timeout=15)
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout) == ({"decision": "stop"} if event == "Stop" else {})
     snapshot = json.loads(next((directory / "states").glob("*.json")).read_text())
